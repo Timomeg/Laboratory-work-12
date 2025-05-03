@@ -1,0 +1,5 @@
+potreb 200000 1 RUB
+ipoteka 100000 5 USD
+ipoteka 400000 6 GBP
+ipoteka 500000 7 ILS
+ipoteka 300000 10 TRY

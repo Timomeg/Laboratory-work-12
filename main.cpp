@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <fstream>
 #include <string>
+#include <set>
+#include <unordered_set>
 // Перечисление для валют
 enum class currency{
     RUB,
@@ -15,6 +17,7 @@ enum class currency{
     TRY,
     JPY
 };
+// Класс кредит
 class BankCredit{
     std::string name;
     size_t sum;
@@ -37,16 +40,36 @@ public:
         this->percent = percent;
     }
     // Оператор сравнения для сортировки
-    bool operator < (const BankCredit& credit1) const{
-        return (percent < credit1.percent);
+    bool operator < (const BankCredit& credit) const{
+        return (percent < credit.percent);
     }
+    // 
+    bool operator()(const BankCredit& credit) const{
+        return(this->sum == credit.sum 
+            && this->percent == credit.percent
+            && this->name == credit.name
+            && this->curr == credit.curr);
+    }
+    // гетеры
+    size_t Sum() const{return sum;}
+    size_t Percent() const{return percent;}
+    std::string Name() const{return name;}
+    currency Currency() const{return curr;}
     // Описания дружественных методов для вывода и сохранения в файл
     friend std::ostream& operator<<(std::ostream&, const BankCredit& credit);
     friend std::ofstream& operator<<(std::ofstream& stream, const BankCredit& credit);
     friend void saveToFile(const std::string& filename, const std::vector<BankCredit>& credits);
     friend void saveToFile(const std::string& filename, const std::deque<BankCredit>& credits);
 };
-
+struct HashFunction {
+    size_t operator()(const BankCredit& credit) const {
+        size_t h1 = std::hash<std::string>{}(credit.Name());
+        size_t h2 = std::hash<size_t>{}(credit.Sum());
+        size_t h3 = std::hash<size_t>{}(credit.Percent());
+        size_t h4 = std::hash<size_t>{}(static_cast<int>(credit.Currency()));
+        return h1 ^ (h2 << 1) ^ (h3 << 2) ^ (h4 << 3);
+    }
+};
 // Перевод валюты в строку для вывода в терминал
 std::ostream& operator<<(std::ostream& stream, const currency& curr){
     switch(curr) {
@@ -88,7 +111,7 @@ std::ofstream& operator<<(std::ofstream& stream, const BankCredit& credit){
 // Сохранение в файл вектора кредитов
 void saveToFile(const std::string& filename, const std::vector<BankCredit>& credits){
     std::ofstream out;
-    out.open(filename, std::ios::app);
+    out.open(filename, std::ios::out);
     if (out.is_open()){
         for (size_t i {}; i < credits.size(); i++) {
             out << credits[i].name << " " << credits[i].sum << " "  << credits[i].percent << " "  << credits[i].curr << "\n";
@@ -99,7 +122,7 @@ void saveToFile(const std::string& filename, const std::vector<BankCredit>& cred
 // Сохранение двухсвязного списка кредитов
 void saveToFile(const std::string& filename, const std::deque<BankCredit>& credits){
     std::ofstream out;
-    out.open(filename, std::ios::app);
+    out.open(filename, std::ios::out);
     if (out.is_open()){
         for (size_t i {}; i < credits.size(); i++){
             out << credits[i].name << " " << credits[i].sum << " "  << credits[i].percent << " "  << credits[i].curr << "\n";
@@ -161,4 +184,16 @@ void loadFromFile(const std::string& filename, std::vector<BankCredit>& vec){
     }
 }
 int main(){
+    BankCredit bc1 {"potreb", 200000, 1, currency::RUB};
+    BankCredit bc2 {"ipoteka", 100000, 5, currency::USD};
+    BankCredit bc3 {"ipoteka", 400000, 6, currency::GBP};
+    BankCredit bc4 {"ipoteka", 500000, 7, currency::ILS};
+    BankCredit bc5 {"ipoteka", 300000, 10, currency::TRY};
+    std::set<BankCredit> mySet{bc1, bc2};
+    //mySet.insert(bc3);
+    //mySet.insert(bc4);
+    //mySet.insert(bc5);
+    for (BankCredit n : mySet)
+        std::cout << n << "\t";
+    std::cout << std::endl;
 }

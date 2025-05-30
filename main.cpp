@@ -20,8 +20,8 @@ enum class currency{
 // Класс кредит
 class BankCredit{
     std::string name;
-    size_t sum;
-    size_t percent;
+    int sum;
+    int percent;
     currency curr;
 public:
     // Дефолтный конструктор 
@@ -33,7 +33,7 @@ public:
     }
     // Констуктор копирования
     // В констукторе перемещения нет смысла, так как все поля класса занимают фиксированное кол-во памяти
-    BankCredit(std::string name, size_t sum, size_t percent, currency curr){
+    BankCredit(std::string name, int sum, int percent, currency curr){
         this->curr = curr;
         this->sum = sum;
         this->name = name;
@@ -43,12 +43,12 @@ public:
     bool operator < (const BankCredit& credit) const{
         return (percent < credit.percent);
     }
-    // 
-    bool operator()(const BankCredit& credit) const{
-        return(this->sum == credit.sum 
-            && this->percent == credit.percent
-            && this->name == credit.name
-            && this->curr == credit.curr);
+    // ==
+    bool operator==(const BankCredit& credit) const {
+        return sum == credit.sum && 
+               percent == credit.percent && 
+               name == credit.name &&
+               curr == credit.curr;
     }
     // гетеры
     size_t Sum() const{return sum;}
@@ -62,12 +62,12 @@ public:
     friend void saveToFile(const std::string& filename, const std::deque<BankCredit>& credits);
 };
 struct HashFunction {
-    size_t operator()(const BankCredit& credit) const {
-        size_t h1 = std::hash<std::string>{}(credit.Name());
-        size_t h2 = std::hash<size_t>{}(credit.Sum());
-        size_t h3 = std::hash<size_t>{}(credit.Percent());
-        size_t h4 = std::hash<size_t>{}(static_cast<int>(credit.Currency()));
-        return h1 ^ (h2 << 1) ^ (h3 << 2) ^ (h4 << 3);
+    int operator()(const BankCredit& credit) const {
+        int h1 = std::hash<std::string>{}(credit.Name());
+        int h2 = std::hash<int>{}(credit.Sum());
+        int h3 = std::hash<int>{}(credit.Percent());
+        int h4 = std::hash<int>{}(static_cast<int>(credit.Currency()));
+        return h1 + (h2 * 1) + (h3 * 2) + (h4 * 3);
     }
 };
 // Перевод валюты в строку для вывода в терминал
@@ -169,10 +169,10 @@ void loadFromFile(const std::string& filename, std::vector<BankCredit>& vec){
             std::string name = line.substr(0, pos1);
 
             auto pos2 = line.find(" ", pos1+1);
-            size_t sum{std::stoul(line.substr(pos1+1, pos2))};
+            int sum{std::stoul(line.substr(pos1+1, pos2))};
 
             auto pos3 = line.find(" ", pos2+1);
-            size_t percent{std::stoul(line.substr(pos2+1, pos3))};
+            int percent{std::stoul(line.substr(pos2+1, pos3))};
 
             std::string notParsedCurrency = line.substr(pos3+1);
             currency currency_code = parseCurrency(notParsedCurrency);
@@ -189,11 +189,11 @@ int main(){
     BankCredit bc3 {"ipoteka", 400000, 6, currency::GBP};
     BankCredit bc4 {"ipoteka", 500000, 7, currency::ILS};
     BankCredit bc5 {"ipoteka", 300000, 10, currency::TRY};
-    std::set<BankCredit> mySet{bc1, bc2};
-    //mySet.insert(bc3);
-    //mySet.insert(bc4);
-    //mySet.insert(bc5);
+    std::unordered_set<BankCredit, HashFunction> mySet{bc1, bc2};
+    mySet.insert(bc3);
+    mySet.insert(bc4);
+    mySet.insert(bc5);
     for (BankCredit n : mySet)
-        std::cout << n << "\t";
+        std::cout << n << "\n";
     std::cout << std::endl;
 }
